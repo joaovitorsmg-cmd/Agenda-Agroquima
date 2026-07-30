@@ -314,7 +314,7 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
     <div class="modal-h"><span>⚙ Configurações</span><button onclick="fechar('ovCfg')">✕</button></div>
     <div class="modal-b">
       <div style="font-size:12px;color:#777;margin-bottom:12px">Salvas neste dispositivo. Configure o JSONBin em cada aparelho (ou edite o arquivo antes de publicar).</div>
-      <div class="frow"><div><label>JSONBin — BIN ID</label><input id="cfgBin"></div></div>
+      <div class="frow"><div><label>JSONBin — BIN ID</label><div style="display:flex;gap:6px;align-items:center"><input id="cfgBin" style="flex:1"><button class="btn btn-ghost btn-sm" type="button" onclick="gerarBin()">Gerar BIN</button></div></div></div>
       <div class="frow"><div><label>JSONBin — X-Master-Key</label><input id="cfgKey"></div></div>
       <label style="margin-top:4px">Expediente do link público (seg–sex)</label>
       <div class="frow">
@@ -340,13 +340,12 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
 <script>
 /* ============================================================
    CONFIGURAÇÃO — preencher antes de publicar
-   1. Crie um bin em jsonbin.io com o conteúdo: {"appointments":[],"requests":[],"log":[]}
-   2. Cole abaixo o BIN_ID e a X-Master-Key
-   3. Ajuste as senhas de acesso
+   1. Cole abaixo o BIN_ID e a X-Master-Key (ou gere via painel: 5 toques no logo → Gerar BIN)
+   2. Após gerar, republique o arquivo com os valores fixos abaixo
 ============================================================ */
 const CONFIG = {
-  BIN_ID: '',                       // ex: '66a1b2c3d4e5f6a7b8c9d0e1'
-  API_KEY: '',                      // X-Master-Key do JSONBin
+  BIN_ID: '',                       // cole aqui o ID gerado pelo painel
+  API_KEY: '',                      // cole aqui a X-Master-Key do JSONBin
   // Janelas de atendimento para o link público (seg-sex)
   EXPEDIENTE: [ ['08:00','11:30'], ['13:30','17:30'] ],
   DURACAO_SLOT: 30,                 // minutos
@@ -751,6 +750,27 @@ async function testarBin(){
     const r=await fetch(JB+b+'/latest',{headers:{'X-Master-Key':k}});
     if(r.ok){ el.style.color='var(--ok)'; el.textContent='✓ Conexão OK — dados acessíveis.'; }
     else{ el.style.color='var(--warn)'; el.textContent='✗ Erro '+r.status+' — verifique BIN ID e chave.'; }
+  }catch(e){ el.style.color='var(--warn)'; el.textContent='✗ Sem resposta — verifique a internet.'; }
+}
+async function gerarBin(){
+  const k=$('cfgKey').value.trim(), el=$('cfgTeste');
+  if(!k){ el.style.color='var(--warn)'; el.textContent='Informe a X-Master-Key primeiro.'; return; }
+  el.style.color='#777'; el.textContent='Criando BIN...';
+  try{
+    const r=await fetch('https://api.jsonbin.io/v3/b',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':'Agenda AQM'},
+      body:JSON.stringify({appointments:[],requests:[],log:[]})
+    });
+    const j=await r.json();
+    if(r.ok && j.metadata?.id){
+      $('cfgBin').value=j.metadata.id;
+      el.style.color='var(--ok)';
+      el.textContent='✓ BIN criado: '+j.metadata.id+' — clique em Salvar.';
+    } else {
+      el.style.color='var(--warn)';
+      el.textContent='✗ Erro '+r.status+' — verifique a X-Master-Key.';
+    }
   }catch(e){ el.style.color='var(--warn)'; el.textContent='✗ Sem resposta — verifique a internet.'; }
 }
 
