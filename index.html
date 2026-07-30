@@ -135,6 +135,23 @@ label{font-size:11px;font-weight:bold;text-transform:uppercase;color:#666;displa
 
 
 
+
+/* ---------- BLOCOS DE PERÍODO ---------- */
+.bloco-banner{display:block;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;margin-bottom:2px;text-transform:uppercase;letter-spacing:.3px}
+.bloco-parcial{background:#D97706}
+.bloco-indisponivel{background:#DC2626}
+.bloco-restrito{background:#7C3AED}
+.h-dow .bloco-banner{margin-top:4px;font-size:9px;padding:1px 4px}
+/* tipo-opt */
+.tipo-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:2px solid var(--line);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:border-color .15s,background .15s}
+.tipo-opt input[type=radio]{display:none}
+.tipo-opt.sel{border-color:var(--royal);background:#EAF3FE}
+.tipo-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tipo-opt b{font-size:13px;color:var(--navy);display:block}
+.tipo-opt small{font-size:11px;color:#777;display:block;margin-top:1px}
+/* fab secundário */
+.fab-sec{bottom:calc(88px + env(safe-area-inset-bottom));right:calc(22px + env(safe-area-inset-right));width:46px;height:46px;font-size:20px;box-shadow:0 3px 10px rgba(13,71,161,.35)}
+
 /* ---------- PÁGINA PÚBLICA ---------- */
 #pub{background:var(--bg);min-height:100dvh}
 .pub-wrap{max-width:600px;margin:0 auto;padding:16px 14px calc(32px + env(safe-area-inset-bottom))}
@@ -276,6 +293,7 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
   </div>
 
   <main><div class="cal-card" id="calArea"></div></main>
+  <button class="fab fab-sec" onclick="abrirBloco()" title="Novo bloco de período">📍</button>
   <button class="fab" onclick="abrirForm()" title="Novo compromisso">+</button>
 </div>
 
@@ -363,6 +381,40 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
   </div>
 </div>
 
+<!-- ================= MODAL BLOCO DE PERÍODO ================= -->
+<div class="overlay" id="ovBloco">
+  <div class="modal">
+    <div class="modal-h"><span id="blocoTit">Novo bloco de período</span><button onclick="fechar('ovBloco')">✕</button></div>
+    <div class="modal-b">
+      <input type="hidden" id="bId">
+      <div class="frow"><div><label>Título / Destino *</label><input id="bTit" placeholder="Ex: Canarana, Pescaria, Simpósio..."></div></div>
+      <div class="frow">
+        <div><label>Data início *</label><input type="date" id="bIni"></div>
+        <div><label>Data fim *</label><input type="date" id="bFim"></div>
+      </div>
+      <div class="frow"><div><label>Local / Observação</label><input id="bLocal" placeholder="Ex: Canarana - MT, Hotel Fazenda..."></div></div>
+      <label style="margin-bottom:8px">Disponibilidade neste período</label>
+      <label class="tipo-opt" onclick="selecionarTipo(this,'parcial')">
+        <input type="radio" name="bTipo" value="parcial">
+        <span class="tipo-dot" style="background:#D97706"></span>
+        <div><b>Parcialmente disponível</b><small>Presente em outra localidade mas pode ter reuniões e alinhamentos</small></div>
+      </label>
+      <label class="tipo-opt" onclick="selecionarTipo(this,'restrito')">
+        <input type="radio" name="bTipo" value="restrito">
+        <span class="tipo-dot" style="background:#7C3AED"></span>
+        <div><b>Restrito</b><small>Difícil disponibilidade — normalmente não consegue atender, mas editável</small></div>
+      </label>
+      <label class="tipo-opt" onclick="selecionarTipo(this,'indisponivel')">
+        <input type="radio" name="bTipo" value="indisponivel">
+        <span class="tipo-dot" style="background:#DC2626"></span>
+        <div><b>Indisponível</b><small>Fora da empresa — bloqueia horários no link público automaticamente</small></div>
+      </label>
+      <div class="frow" style="margin-top:8px"><div><label>Notas internas</label><textarea id="bNotas" rows="2" placeholder="Detalhes adicionais..."></textarea></div></div>
+    </div>
+    <div class="modal-f" id="blocoFoot"></div>
+  </div>
+</div>
+
 <!-- ================= MODAL CONFIGURAÇÃO ================= -->
 <div class="overlay" id="ovCfg">
   <div class="modal">
@@ -421,7 +473,7 @@ try{
 const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 const JB = 'https://api.jsonbin.io/v3/b/';
-let DB = { appointments: [], requests: [], log: [] };
+let DB = { appointments: [], requests: [], log: [], blocos: [] };
 let usuario = 'equipe', view = 'semana', cursor = new Date(), slotSel = null;
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,'0');
@@ -443,7 +495,7 @@ async function carregar(){
     const r = await fetch(JB+CONFIG.BIN_ID+'/latest',{headers:{'X-Master-Key':CONFIG.API_KEY}});
     const j = await r.json();
     DB = j.record || DB;
-    DB.appointments ||= []; DB.requests ||= []; DB.log ||= [];
+    DB.appointments ||= []; DB.requests ||= []; DB.log ||= []; DB.blocos ||= [];
     setSync(true);
   }catch(e){ setSync(false); toast('Falha ao sincronizar — verifique a internet'); }
 }
@@ -525,8 +577,9 @@ function renderMes(){
     const ds=iso(d), evs=eventosDoDia(ds);
     const cls=(d.getMonth()!==m?'out ':'')+(ds===hoje()?'today':'');
     html+=`<div class="cell ${cls}" onclick="cursor=new Date('${ds}T12:00');setView('dia')"><div class="dnum">${d.getDate()}</div>`;
-    evs.slice(0,3).forEach(a=>{ html+=`<span class="chip c-${a.cat} ${a.status==='concluido'?'c-done':a.status==='cancelado'?'c-cancel':''}" onclick="event.stopPropagation();abrirForm('${a.id}')">${a.start} ${esc(a.title)}</span>`; });
-    if(evs.length>3) html+=`<span class="mais">+${evs.length-3} mais</span>`;
+    blocosNoDia(ds).forEach(b=>{ html+=`<span class="bloco-banner bloco-${b.tipo}" onclick="event.stopPropagation();abrirBloco('${b.id}')" title="${esc(b.titulo)+(b.local?' — '+b.local:'')}">${esc(b.titulo)}</span>`; });
+    evs.slice(0,2).forEach(a=>{ html+=`<span class="chip c-${a.cat} ${a.status==='concluido'?'c-done':a.status==='cancelado'?'c-cancel':''}" onclick="event.stopPropagation();abrirForm('${a.id}')">${a.start} ${esc(a.title)}</span>`; });
+    if(evs.length>2) html+=`<span class="mais">+${evs.length-2} mais</span>`;
     html+='</div>';
   }
   $('calArea').innerHTML=html+'</div>';
@@ -539,7 +592,11 @@ function renderSemanaDia(nCols){
     ? DOWS[cursor.getDay()]+', '+cursor.getDate()+' de '+MESES[cursor.getMonth()]
     : dias[0].getDate()+' – '+dias[6].getDate()+' de '+MESES[dias[6].getMonth()]+' '+dias[6].getFullYear();
   let html=`<div class="grid-sem" style="--cols:${nCols}"><div style="background:var(--navy)"></div>`;
-  dias.forEach(d=>{ html+=`<div class="h-dow ${iso(d)===hoje()?'today':''}">${DOWS[d.getDay()]}<small>${d.getDate()}/${pad(d.getMonth()+1)}</small></div>`; });
+  dias.forEach(d=>{
+    const ds=iso(d);
+    const bls=blocosNoDia(ds).map(b=>`<span class="bloco-banner bloco-${b.tipo}" onclick="event.stopPropagation();abrirBloco('${b.id}')">${esc(b.titulo)}</span>`).join('');
+    html+=`<div class="h-dow ${ds===hoje()?'today':''}">${DOWS[d.getDay()]}<small>${d.getDate()}/${pad(d.getMonth()+1)}</small>${bls}</div>`;
+  });
   for(let h=H_INI;h<H_FIM;h++){
     html+=`<div class="hourlbl">${pad(h)}:00</div>`;
     dias.forEach(d=>{
@@ -735,13 +792,16 @@ function renderSlotsPublicos(){
   let html='';
   if(!grupos.length) html='<div class="aviso">Sem horários disponíveis nos próximos dias. Entre em contato diretamente.</div>';
   grupos.forEach(g=>{
-    html+=`<div class="dia-grupo"><h3>${g.dow}, ${g.dt.getDate()} de ${MESES[g.dt.getMonth()]}</h3><div class="slots">`;
+    const bloco=(DB.blocos||[]).find(b=>g.ds>=b.dataIni&&g.ds<=b.dataFim&&b.tipo!=='indisponivel');
+    const bLabel=bloco?`<span style="font-size:10px;font-weight:bold;padding:1px 8px;border-radius:10px;color:#fff;background:${bloco.tipo==='parcial'?'#D97706':'#7C3AED'};margin-left:8px">${esc(bloco.titulo)}</span>`:'';
+    html+=`<div class="dia-grupo"><h3>${g.dow}, ${g.dt.getDate()} de ${MESES[g.dt.getMonth()]}${bLabel}</h3><div class="slots">`;
     g.slots.forEach(s=>{ html+=`<button class="slot" onclick="selSlot(this,'${g.ds}','${s}')">${s}</button>`; });
     html+='</div></div>';
   });
   $('pubSlots').innerHTML=html;
 }
 function slotsLivres(ds){
+  if((DB.blocos||[]).some(b=>ds>=b.dataIni&&ds<=b.dataFim&&b.tipo==='indisponivel')) return [];
   const ocup = DB.appointments.filter(a=>a.date===ds&&a.status!=='cancelado')
     .concat(DB.requests.filter(r=>r.date===ds&&r.status==='aguardando'));
   const livres=[];
@@ -818,6 +878,52 @@ function salvarCfg(){
 function limparCfg(){
   if(!confirm('Remover configurações deste dispositivo e voltar ao padrão do arquivo?')) return;
   localStorage.removeItem('agAQM_cfg'); location.reload();
+}
+
+/* ---------- BLOCOS DE PERÍODO ---------- */
+function blocosNoDia(ds){ return (DB.blocos||[]).filter(b=>ds>=b.dataIni&&ds<=b.dataFim); }
+function selecionarTipo(el,tipo){
+  document.querySelectorAll('.tipo-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  el.querySelector('input[type=radio]').checked=true;
+}
+function abrirBloco(id){
+  $('bId').value=id||'';
+  $('blocoTit').textContent=id?'Editar bloco':'Novo bloco de período';
+  if(id){
+    const b=DB.blocos.find(x=>x.id===id)||{}; 
+    $('bTit').value=b.titulo||''; $('bIni').value=b.dataIni||''; $('bFim').value=b.dataFim||'';
+    $('bLocal').value=b.local||''; $('bNotas').value=b.notas||'';
+    document.querySelectorAll('.tipo-opt').forEach(o=>{ o.classList.remove('sel'); if(o.querySelector('input').value===b.tipo) o.classList.add('sel'); });
+    const r=document.querySelector(`input[name=bTipo][value="${b.tipo||'parcial'}"]`); if(r) r.checked=true;
+    $('blocoFoot').innerHTML=`<button class="btn btn-warn btn-sm" onclick="excluirBloco('${id}')">Excluir</button><button class="btn btn-ghost btn-sm" onclick="fechar('ovBloco')">Cancelar</button><button class="btn btn-royal" onclick="salvarBloco()">Salvar</button>`;
+  } else {
+    $('bTit').value=''; $('bIni').value=iso(cursor); $('bFim').value=iso(cursor);
+    $('bLocal').value=''; $('bNotas').value='';
+    document.querySelectorAll('.tipo-opt').forEach(o=>o.classList.remove('sel'));
+    const first=document.querySelector('.tipo-opt'); if(first){ first.classList.add('sel'); first.querySelector('input').checked=true; }
+    $('blocoFoot').innerHTML=`<button class="btn btn-ghost btn-sm" onclick="fechar('ovBloco')">Cancelar</button><button class="btn btn-royal" onclick="salvarBloco()">Salvar</button>`;
+  }
+  $('ovBloco').classList.add('open');
+}
+async function salvarBloco(){
+  const t=$('bTit').value.trim(), ini=$('bIni').value, fim=$('bFim').value;
+  if(!t||!ini||!fim){ toast('Preencha título e datas'); return; }
+  if(fim<ini){ toast('Data fim deve ser igual ou após a data início'); return; }
+  const tipo=document.querySelector('input[name=bTipo]:checked')?.value||'parcial';
+  const id=$('bId').value||uid();
+  const idx=(DB.blocos||[]).findIndex(x=>x.id===id);
+  DB.blocos||=[]; 
+  const bloco={id, titulo:t, dataIni:ini, dataFim:fim, local:$('bLocal').value.trim(), tipo, notas:$('bNotas').value.trim()};
+  if(idx>=0) DB.blocos[idx]=bloco; else DB.blocos.push(bloco);
+  log('bloco salvo', t+' '+ini+(fim!==ini?' → '+fim:''));
+  await salvar(); fechar('ovBloco'); render(); toast('Bloco salvo ✓');
+}
+async function excluirBloco(id){
+  if(!confirm('Excluir este bloco de período?')) return;
+  DB.blocos=(DB.blocos||[]).filter(x=>x.id!==id);
+  log('bloco excluído',id);
+  await salvar(); fechar('ovBloco'); render(); toast('Bloco excluído');
 }
 async function testarBin(){
   const b=$('cfgBin').value.trim(), k=$('cfgKey').value.trim(), el=$('cfgTeste');
