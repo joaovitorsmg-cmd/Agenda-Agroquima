@@ -143,12 +143,11 @@ label{font-size:11px;font-weight:bold;text-transform:uppercase;color:#666;displa
 .bloco-restrito{background:#7C3AED}
 .h-dow .bloco-banner{margin-top:4px;font-size:9px;padding:1px 4px}
 /* tipo-opt */
-.tipo-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:2px solid var(--line);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:border-color .15s,background .15s}
-.tipo-opt input[type=radio]{display:none}
-.tipo-opt.sel{border-color:var(--royal);background:#EAF3FE}
-.tipo-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:3px}
-.tipo-opt b{font-size:13px;color:var(--navy);display:block}
-.tipo-opt small{font-size:11px;color:#777;display:block;margin-top:1px}
+.tipo-btn{border:2px solid var(--line);border-radius:10px;padding:12px 6px;text-align:center;background:#fff;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;width:100%}
+.tipo-btn.ativo{border-color:var(--royal);background:#EAF3FE;box-shadow:0 0 0 3px rgba(13,71,161,.12)}
+.tipo-btn .ti{display:block;font-size:26px;margin-bottom:6px}
+.tipo-btn b{display:block;font-size:12px;color:var(--navy);font-weight:900}
+.tipo-btn small{display:block;font-size:10px;color:#777;margin-top:3px;line-height:1.35}
 /* fab secundário */
 .fab-sec{bottom:calc(88px + env(safe-area-inset-bottom));right:calc(22px + env(safe-area-inset-right));width:46px;height:46px;font-size:20px;box-shadow:0 3px 10px rgba(13,71,161,.35)}
 
@@ -293,7 +292,7 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
   </div>
 
   <main><div class="cal-card" id="calArea"></div></main>
-  <button class="fab fab-sec" onclick="abrirBloco()" title="Novo bloco de período">📍</button>
+  <button class="fab fab-sec" onclick="abrirBloco()" title="Ausência / Deslocamento">📍</button>
   <button class="fab" onclick="abrirForm()" title="Novo compromisso">+</button>
 </div>
 
@@ -384,32 +383,27 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
 <!-- ================= MODAL BLOCO DE PERÍODO ================= -->
 <div class="overlay" id="ovBloco">
   <div class="modal">
-    <div class="modal-h"><span id="blocoTit">Novo bloco de período</span><button onclick="fechar('ovBloco')">✕</button></div>
+    <div class="modal-h"><span id="blocoTit">📍 Nova ausência / deslocamento</span><button onclick="fechar('ovBloco')">✕</button></div>
     <div class="modal-b">
       <input type="hidden" id="bId">
-      <div class="frow"><div><label>Título / Destino *</label><input id="bTit" placeholder="Ex: Canarana, Pescaria, Simpósio..."></div></div>
+      <input type="hidden" id="bTipoVal" value="parcial">
+      <div class="frow"><div><label>Onde Luciana estará *</label><input id="bTit" placeholder="Ex: Canarana, Pescaria, Simpósio, Rio Verde..."></div></div>
       <div class="frow">
-        <div><label>Data início *</label><input type="date" id="bIni"></div>
-        <div><label>Data fim *</label><input type="date" id="bFim"></div>
+        <div><label>De *</label><input type="date" id="bIni"></div>
+        <div><label>Até *</label><input type="date" id="bFim"></div>
       </div>
-      <div class="frow"><div><label>Local / Observação</label><input id="bLocal" placeholder="Ex: Canarana - MT, Hotel Fazenda..."></div></div>
-      <label style="margin-bottom:8px">Disponibilidade neste período</label>
-      <label class="tipo-opt" onclick="selecionarTipo(this,'parcial')">
-        <input type="radio" name="bTipo" value="parcial">
-        <span class="tipo-dot" style="background:#D97706"></span>
-        <div><b>Parcialmente disponível</b><small>Presente em outra localidade mas pode ter reuniões e alinhamentos</small></div>
-      </label>
-      <label class="tipo-opt" onclick="selecionarTipo(this,'restrito')">
-        <input type="radio" name="bTipo" value="restrito">
-        <span class="tipo-dot" style="background:#7C3AED"></span>
-        <div><b>Restrito</b><small>Difícil disponibilidade — normalmente não consegue atender, mas editável</small></div>
-      </label>
-      <label class="tipo-opt" onclick="selecionarTipo(this,'indisponivel')">
-        <input type="radio" name="bTipo" value="indisponivel">
-        <span class="tipo-dot" style="background:#DC2626"></span>
-        <div><b>Indisponível</b><small>Fora da empresa — bloqueia horários no link público automaticamente</small></div>
-      </label>
-      <div class="frow" style="margin-top:8px"><div><label>Notas internas</label><textarea id="bNotas" rows="2" placeholder="Detalhes adicionais..."></textarea></div></div>
+      <label style="display:block;margin-bottom:8px">Como fica a agenda neste período?</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px">
+        <button type="button" class="tipo-btn" data-tipo="parcial" onclick="setTipo('parcial')">
+          <span class="ti">🟡</span><b>Pode atender</b><small>Reuniões e alinhamentos possíveis</small>
+        </button>
+        <button type="button" class="tipo-btn" data-tipo="restrito" onclick="setTipo('restrito')">
+          <span class="ti">🟣</span><b>Difícil</b><small>Raramente consegue atender</small>
+        </button>
+        <button type="button" class="tipo-btn" data-tipo="indisponivel" onclick="setTipo('indisponivel')">
+          <span class="ti">🔴</span><b>Fora</b><small>Bloqueia o link público</small>
+        </button>
+      </div>
     </div>
     <div class="modal-f" id="blocoFoot"></div>
   </div>
@@ -882,27 +876,23 @@ function limparCfg(){
 
 /* ---------- BLOCOS DE PERÍODO ---------- */
 function blocosNoDia(ds){ return (DB.blocos||[]).filter(b=>ds>=b.dataIni&&ds<=b.dataFim); }
-function selecionarTipo(el,tipo){
-  document.querySelectorAll('.tipo-opt').forEach(o=>o.classList.remove('sel'));
-  el.classList.add('sel');
-  el.querySelector('input[type=radio]').checked=true;
+function setTipo(tipo){
+  $('bTipoVal').value=tipo;
+  document.querySelectorAll('.tipo-btn').forEach(b=>b.classList.toggle('ativo', b.dataset.tipo===tipo));
 }
 function abrirBloco(id){
   $('bId').value=id||'';
-  $('blocoTit').textContent=id?'Editar bloco':'Novo bloco de período';
   if(id){
-    const b=DB.blocos.find(x=>x.id===id)||{}; 
+    const b=DB.blocos.find(x=>x.id===id)||{};
+    $('blocoTit').textContent='✏ Editar período';
     $('bTit').value=b.titulo||''; $('bIni').value=b.dataIni||''; $('bFim').value=b.dataFim||'';
-    $('bLocal').value=b.local||''; $('bNotas').value=b.notas||'';
-    document.querySelectorAll('.tipo-opt').forEach(o=>{ o.classList.remove('sel'); if(o.querySelector('input').value===b.tipo) o.classList.add('sel'); });
-    const r=document.querySelector(`input[name=bTipo][value="${b.tipo||'parcial'}"]`); if(r) r.checked=true;
-    $('blocoFoot').innerHTML=`<button class="btn btn-warn btn-sm" onclick="excluirBloco('${id}')">Excluir</button><button class="btn btn-ghost btn-sm" onclick="fechar('ovBloco')">Cancelar</button><button class="btn btn-royal" onclick="salvarBloco()">Salvar</button>`;
+    setTipo(b.tipo||'parcial');
+    $('blocoFoot').innerHTML=`<button class="btn btn-warn" style="flex:0 0 auto" onclick="excluirBloco('${id}')">🗑</button><span style="flex:1"></span><button class="btn btn-ghost btn-sm" onclick="fechar('ovBloco')">Cancelar</button><button class="btn btn-royal" onclick="salvarBloco()">Salvar ✓</button>`;
   } else {
+    $('blocoTit').textContent='📍 Nova ausência / deslocamento';
     $('bTit').value=''; $('bIni').value=iso(cursor); $('bFim').value=iso(cursor);
-    $('bLocal').value=''; $('bNotas').value='';
-    document.querySelectorAll('.tipo-opt').forEach(o=>o.classList.remove('sel'));
-    const first=document.querySelector('.tipo-opt'); if(first){ first.classList.add('sel'); first.querySelector('input').checked=true; }
-    $('blocoFoot').innerHTML=`<button class="btn btn-ghost btn-sm" onclick="fechar('ovBloco')">Cancelar</button><button class="btn btn-royal" onclick="salvarBloco()">Salvar</button>`;
+    setTipo('parcial');
+    $('blocoFoot').innerHTML=`<button class="btn btn-ghost btn-sm" onclick="fechar('ovBloco')">Cancelar</button><button class="btn btn-royal" onclick="salvarBloco()">Salvar ✓</button>`;
   }
   $('ovBloco').classList.add('open');
 }
@@ -910,11 +900,11 @@ async function salvarBloco(){
   const t=$('bTit').value.trim(), ini=$('bIni').value, fim=$('bFim').value;
   if(!t||!ini||!fim){ toast('Preencha título e datas'); return; }
   if(fim<ini){ toast('Data fim deve ser igual ou após a data início'); return; }
-  const tipo=document.querySelector('input[name=bTipo]:checked')?.value||'parcial';
+  const tipo=$('bTipoVal').value||'parcial';
   const id=$('bId').value||uid();
-  const idx=(DB.blocos||[]).findIndex(x=>x.id===id);
-  DB.blocos||=[]; 
-  const bloco={id, titulo:t, dataIni:ini, dataFim:fim, local:$('bLocal').value.trim(), tipo, notas:$('bNotas').value.trim()};
+  DB.blocos||=[];
+  const idx=DB.blocos.findIndex(x=>x.id===id);
+  const bloco={id, titulo:t, dataIni:ini, dataFim:fim, tipo};
   if(idx>=0) DB.blocos[idx]=bloco; else DB.blocos.push(bloco);
   log('bloco salvo', t+' '+ini+(fim!==ini?' → '+fim:''));
   await salvar(); fechar('ovBloco'); render(); toast('Bloco salvo ✓');
