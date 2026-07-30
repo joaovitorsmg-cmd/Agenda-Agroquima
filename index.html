@@ -346,6 +346,23 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
   </div>
 </div>
 
+<!-- ================= MODAL RECUSA ================= -->
+<div class="overlay" id="ovRecusa">
+  <div class="modal">
+    <div class="modal-h"><span>Recusar solicitação</span><button onclick="fechar('ovRecusa')">✕</button></div>
+    <div class="modal-b">
+      <div id="recusaInfo" style="background:var(--bg);border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:var(--navy)"></div>
+      <label>Motivo / observação (opcional)</label>
+      <textarea id="recusaMotivo" rows="3" placeholder="Ex: Agenda lotada nesta data, conflito de compromisso..."></textarea>
+      <div style="font-size:11px;color:#888;margin-top:6px">Se preenchido, o motivo será incluído na mensagem do WhatsApp.</div>
+    </div>
+    <div class="modal-f" style="flex-direction:column;gap:8px;align-items:stretch">
+      <button class="btn btn-royal" id="recusaWhatsBtn" style="width:100%;padding:12px;font-size:14px">💬 Recusar e avisar pelo WhatsApp</button>
+      <button class="btn btn-warn" id="recusaSilBtn" style="width:100%;padding:10px;font-size:13px">Recusar sem avisar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= MODAL CONFIGURAÇÃO ================= -->
 <div class="overlay" id="ovCfg">
   <div class="modal">
@@ -656,11 +673,32 @@ async function aprovarSol(id){
   log('aprovou reunião', r.name+' '+r.date+' '+r.start);
   await salvar(); abrirSolicitacoes(); render(); toast('Reunião agendada ✓');
 }
-async function recusarSol(id){
-  const r=DB.requests.find(x=>x.id===id);
+function recusarSol(id){
+  const r=DB.requests.find(x=>x.id===id); if(!r) return;
+  const data=r.date.split('-').reverse().join('/');
+  $('recusaInfo').innerHTML=`<b>${esc(r.name)}</b><br>📅 ${data} das ${r.start} às ${r.end}${r.company?'<br>🏢 '+esc(r.company):''}`;
+  $('recusaMotivo').value='';
+  $('recusaWhatsBtn').onclick=()=>confirmarRecusa(id, true);
+  $('recusaSilBtn').onclick=()=>confirmarRecusa(id, false);
+  fechar('ovSol');
+  $('ovRecusa').classList.add('open');
+}
+async function confirmarRecusa(id, enviarWhats){
+  const r=DB.requests.find(x=>x.id===id); if(!r) return;
+  const motivo=$('recusaMotivo').value.trim();
   r.status='recusada';
-  log('recusou reunião', r.name+' '+r.date);
-  await salvar(); abrirSolicitacoes(); render(); toast('Solicitação recusada');
+  log('recusou reunião', r.name+' '+r.date+(motivo?' | '+motivo:''));
+  await salvar();
+  fechar('ovRecusa');
+  if(enviarWhats){
+    const data=r.date.split('-').reverse().join('/');
+    const motivoTexto=motivo?`\n\n*Motivo:* ${motivo}`:'';
+    const msg=`Olá, *${r.name}*! 👋\n\nSua solicitação de reunião para *${data} às ${r.start}* infelizmente não pôde ser confirmada.${motivoTexto}\n\nCaso queira, entre em contato para tentarmos outro horário.\n\nAtenciosamente,\n*Equipe Agroquima*`;
+    const fone=(r.phone||'').replace(/\D/g,'');
+    const url=`https://wa.me/55${fone}?text=${encodeURIComponent(msg)}`;
+    window.open(url,'_blank');
+  }
+  abrirSolicitacoes(); render(); toast('Solicitação recusada');
 }
 
 /* ---------- LINK PÚBLICO ---------- */
