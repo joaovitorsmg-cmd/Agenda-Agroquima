@@ -1,6 +1,6 @@
 {
   "name": "Agenda Agroquima",
-  "short_name": "Agenda Agroquima",
+  "short_name": "Agenda AQM",
   "description": "Agenda executiva Agroquima — compromissos, demandas e agendamento de reuniões",
   "start_url": "./index.html",
   "scope": "./",
@@ -10,8 +10,13 @@
   "theme_color": "#002B5B",
   "lang": "pt-BR",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "narrow", "label": "Agenda Agroquima" }
   ]
 }
