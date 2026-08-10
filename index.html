@@ -63,7 +63,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--sky);border-colo
 .stat .l{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#777;font-weight:bold}
 .stat.s-hoje{border-left-color:var(--sky)}
 .stat.s-pend{border-left-color:var(--gold)}
-.stat.s-sol{border-left-color:var(--warn);cursor:pointer}
+.stat{cursor:pointer}
+.stat:hover{background:#f5f8ff;transition:background .15s}
+.stat.s-sol{border-left-color:var(--warn)}
 .stat.s-sol:hover{background:#fff8f8}
 
 /* ---------- CALENDÁRIO ---------- */
@@ -285,9 +287,9 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
   </div>
 
   <div class="stats">
-    <div class="stat s-hoje"><div class="n" id="stHoje">0</div><div class="l">Hoje</div></div>
-    <div class="stat"><div class="n" id="stSemana">0</div><div class="l">Esta semana</div></div>
-    <div class="stat s-pend"><div class="n" id="stPend">0</div><div class="l">Pendentes</div></div>
+    <div class="stat s-hoje" onclick="abrirResumo('hoje')"><div class="n" id="stHoje">0</div><div class="l">Hoje ▸</div></div>
+    <div class="stat" onclick="abrirResumo('semana')"><div class="n" id="stSemana">0</div><div class="l">Esta semana ▸</div></div>
+    <div class="stat s-pend" onclick="abrirResumo('pendente')"><div class="n" id="stPend">0</div><div class="l">Pendentes ▸</div></div>
     <div class="stat s-sol" onclick="abrirSolicitacoes()"><div class="n" id="stSol">0</div><div class="l">Solicitações ▸</div></div>
   </div>
 
@@ -406,6 +408,14 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
       </div>
     </div>
     <div class="modal-f" id="blocoFoot"></div>
+  </div>
+</div>
+
+<!-- ================= MODAL RESUMO ================= -->
+<div class="overlay" id="ovResumo">
+  <div class="modal">
+    <div class="modal-h"><span id="resumoTit">Compromissos</span><button onclick="fechar('ovResumo')">✕</button></div>
+    <div class="modal-b" id="resumoLista" style="padding:0"></div>
   </div>
 </div>
 
@@ -698,6 +708,45 @@ function baixarICS(id){
 }
 
 /* ---------- SOLICITAÇÕES ---------- */
+function abrirResumo(tipo){
+  const h=hoje();
+  const ini=iso(inicioSemana(cursor)), fim=iso(fimSemana(cursor));
+  let lista=[], titulo='';
+  if(tipo==='hoje'){
+    const d=new Date(); const ds=iso(d);
+    titulo='Hoje — '+ds.split('-').reverse().slice(0,2).join('/');
+    lista=DB.appointments.filter(a=>a.date===ds&&a.status!=='cancelado').sort((a,b)=>a.start.localeCompare(b.start));
+  } else if(tipo==='semana'){
+    titulo='Esta semana';
+    lista=DB.appointments.filter(a=>a.date>=ini&&a.date<=fim&&a.status!=='cancelado').sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  } else {
+    titulo='Pendentes';
+    lista=DB.appointments.filter(a=>a.status==='pendente'&&a.date<=h).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  }
+  $('resumoTit').textContent=titulo;
+  const CAT_COR={Reunião:'var(--royal)',Visita:'var(--sky)',Evento:'var(--gold)',Interno:'#6c757d',Pessoal:'#9c27b0',Outro:'#607d8b'};
+  let html='';
+  if(!lista.length){
+    html='<p style="padding:32px 20px;text-align:center;color:#888;font-size:14px">Nenhum compromisso encontrado.</p>';
+  } else {
+    lista.forEach(a=>{
+      const dtFmt=a.date.split('-').reverse().slice(0,2).join('/');
+      const cor=CAT_COR[a.cat]||'var(--royal)';
+      const stCls=a.status==='concluido'?'color:var(--ok)':a.status==='cancelado'?'color:#bbb':'color:var(--gold)';
+      html+=`<div onclick="fechar('ovResumo');abrirForm('${a.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+        <div style="min-width:50px;font-size:12px;color:#777;font-weight:700;line-height:1.3">${dtFmt}<br>${a.start}</div>
+        <div style="width:4px;height:36px;border-radius:3px;background:${cor};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;color:var(--navy);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.title)}</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">${esc(a.local||a.cat)} · <span style="${stCls};font-weight:600">${a.status}</span></div>
+        </div>
+        <span style="font-size:18px;color:#ccc">›</span>
+      </div>`;
+    });
+  }
+  $('resumoLista').innerHTML=html;
+  $('ovResumo').classList.add('open');
+}
 function abrirSolicitacoes(){
   const list=DB.requests.filter(r=>r.status==='aguardando');
   let html='';
