@@ -23,7 +23,7 @@
   --ok:#1B5E20; --warn:#C62828; --gold:#B8860B;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;width:100%;color:var(--ink)}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--sky);border-color:var(--royal)}
@@ -41,7 +41,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--sky);border-colo
 .btn-ghost:hover{background:var(--bg)}
 .btn-ok{background:var(--ok);color:#fff}
 .btn-warn{background:var(--warn);color:#fff}
-.btn-sm{padding:5px 10px;font-size:12px}
+.btn-sm{padding:7px 12px;font-size:12px;min-height:38px}
 .badge{background:var(--warn);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:bold;margin-left:5px}
 
 /* ---------- FAIXA DE NAVEGAÇÃO ---------- */
@@ -99,7 +99,7 @@ main{padding:0 16px 90px}
 .hcell{border-left:1px solid var(--line);border-bottom:1px solid var(--line);height:48px;position:relative;cursor:pointer}
 .hcell:hover{background:var(--bg)}
 .hcell.today{background:#F2F8FF}
-.evt{position:absolute;left:2px;right:2px;border-radius:5px;padding:3px 5px;font-size:11px;color:#fff;background:var(--royal);overflow:hidden;z-index:2;border-left:3px solid rgba(0,0,0,.25);cursor:pointer}
+.evt{position:absolute;left:2px;right:2px;border-radius:5px;padding:3px 5px;font-size:11px;color:#fff;background:var(--royal);overflow:hidden;z-index:2;border-left:3px solid rgba(0,0,0,.25);cursor:pointer;touch-action:manipulation}
 .evt b{display:block;font-size:11px}
 .evt.c-done{background:var(--ok);opacity:.7;text-decoration:line-through}
 .evt.c-cancel{background:#999;text-decoration:line-through}
@@ -129,7 +129,7 @@ main{padding:0 16px 90px}
 .modal{background:#fff;border-radius:12px;width:100%;max-width:520px;margin-top:3vh;overflow:hidden}
 .modal-h{background:var(--navy);color:#fff;padding:14px 18px;font-weight:900;font-size:15px;display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;letter-spacing:.5px}
 .modal-h button{background:transparent;border:none;color:#fff;font-size:20px}
-.modal-b{padding:18px}
+.modal-b{padding:18px;max-height:calc(90vh - 56px);overflow-y:auto}
 .frow{display:flex;gap:10px;margin-bottom:12px}
 .frow>div{flex:1}
 label{font-size:11px;font-weight:bold;text-transform:uppercase;color:#666;display:block;margin-bottom:4px;letter-spacing:.4px}
@@ -198,18 +198,22 @@ label{font-size:11px;font-weight:bold;text-transform:uppercase;color:#666;displa
   .topbar .spacer{flex:1}
   #synctxt{display:none}
   #syncdot{width:8px;height:8px}
+  .topbar-lbl{display:none}
+  .topbar-print{display:none}
   .navband{padding:7px 10px;gap:7px;flex-wrap:nowrap}
   #lblPeriodo{min-width:auto;font-size:13px;font-weight:900;flex:1;text-align:center}
-  .viewtabs button{padding:5px 11px;font-size:12px}
-  .datenav button{padding:5px 9px}
+  .viewtabs button{padding:7px 12px;font-size:12px;min-height:38px}
+  .datenav button{padding:7px 11px;min-height:38px}
   #busca,#fCat,.navband .spacer{display:none}
   .stats{gap:6px;padding:8px 10px;display:grid;grid-template-columns:1fr 1fr}
-  .stat{padding:8px 10px;min-width:0}
-  .stat .n{font-size:20px}
-  .cell{min-height:58px}
-  .chip{font-size:9px;padding:1px 3px}
-  main{padding:0 8px 90px}
-  .fab{width:54px;height:54px;font-size:26px;bottom:calc(18px + env(safe-area-inset-bottom));right:calc(18px + env(safe-area-inset-right))}
+  .stat{padding:10px 12px;min-width:0;min-height:68px;display:flex;flex-direction:column;justify-content:center}
+  .stat .n{font-size:22px}
+  .cell{min-height:60px}
+  .chip{font-size:10px;padding:2px 4px}
+  .evt{font-size:12px;padding:4px 6px}
+  .evt b{font-size:12px}
+  main{padding:0 6px 90px}
+  .fab{width:56px;height:56px;font-size:26px;bottom:calc(20px + env(safe-area-inset-bottom));right:calc(18px + env(safe-area-inset-right))}
 }
 
 /* ---------- FLUIDEZ MOBILE / iOS ---------- */
@@ -229,15 +233,16 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
   input,select,textarea{font-size:16px} /* impede zoom automático do iOS ao focar */
   .modal{margin-top:0;border-radius:18px 18px 0 0;max-width:100%;align-self:flex-end;animation:sheetUp .28s cubic-bezier(.2,.9,.3,1)}
   .overlay{align-items:flex-end;padding:0}
-  .modal-b{padding:16px 14px}
+  .modal-b{padding:16px 14px;max-height:calc(82vh - 56px)}
   .modal-f{padding-bottom:calc(14px + env(safe-area-inset-bottom));flex-wrap:wrap}
-  .modal-f .btn{flex:1;text-align:center}
+  .modal-f .btn{flex:1;text-align:center;min-height:44px}
   .frow{flex-wrap:wrap}
   .frow>div{flex:1;min-width:120px}
+  label{font-size:13px}
 }
 @media(max-width:400px){
   .topbar img{height:30px}
-  .btn-sm{padding:5px 8px;font-size:11px}
+  .btn-sm{padding:6px 10px;font-size:11px;min-height:36px}
   .stat .n{font-size:18px}
   .stat .l{font-size:10px}
 }
@@ -259,8 +264,9 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
     <span class="app-title">Agenda Executiva</span>
     <span class="spacer"></span>
     <span style="font-size:11px;color:#888"><span id="syncdot"></span><span id="synctxt">sincronizado</span></span>
-    <button class="btn btn-ghost btn-sm" onclick="copiarLinkPublico()" title="Copiar link de agendamento">🔗 Link de agendamento</button>
-    <button class="btn btn-ghost btn-sm" onclick="window.print()" title="Imprimir visão atual">🖨️</button>
+    <button class="btn btn-ghost btn-sm" id="btnSync" onclick="sincManual()" title="Sincronizar agora">↻</button>
+    <button class="btn btn-ghost btn-sm" onclick="copiarLinkPublico()" title="Copiar link de agendamento">🔗 <span class="topbar-lbl">Link de agendamento</span></button>
+    <button class="btn btn-ghost btn-sm topbar-print" onclick="window.print()" title="Imprimir visão atual">🖨️</button>
   </div>
   <div id="installBanner" style="display:none">
     <span class="ib-txt">📲 Instale a Agenda AQM para acessar mais rápido!</span>
@@ -537,6 +543,27 @@ async function iniciarApp(){
   await carregar();
   setView('semana');
   setInterval(async()=>{ await carregar(); render(); }, 30000); // auto-sync 30s
+  iniciarSwipe();
+}
+async function sincManual(){
+  const btn=$('btnSync'); if(btn){ btn.style.opacity='.4'; btn.disabled=true; }
+  await carregar(); render();
+  if(btn){ btn.style.opacity=''; btn.disabled=false; }
+  toast('Sincronizado ✓');
+}
+function iniciarSwipe(){
+  const main=$('calArea')?.closest('main'); if(!main) return;
+  let sx=0, sy=0, t=0;
+  main.addEventListener('touchstart',e=>{
+    const pt=e.touches[0]; sx=pt.clientX; sy=pt.clientY; t=Date.now();
+  },{passive:true});
+  main.addEventListener('touchend',e=>{
+    if(Date.now()-t>400) return;
+    const pt=e.changedTouches[0];
+    const dx=pt.clientX-sx, dy=pt.clientY-sy;
+    if(Math.abs(dx)<Math.abs(dy)*1.5 || Math.abs(dx)<50) return;
+    if(view==='mes'||view==='semana'||view==='dia') navegar(dx<0?1:-1);
+  },{passive:true});
 }
 
 /* ---------- NAVEGAÇÃO ---------- */
@@ -570,7 +597,7 @@ function render(){
   const q=($('busca').value||'').trim();
   if(q){ renderBusca(); return; }
   if(view==='mes') renderMes();
-  else renderSemanaDia(view==='dia'?1:7);
+  else renderSemanaDia(view==='dia'?1:(window.innerWidth<600?3:7));
 }
 function atualizarStats(){
   const h=hoje();
