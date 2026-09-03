@@ -257,6 +257,21 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
 </head>
 <body>
 
+<!-- ================= TELA DE LOGIN ================= -->
+<div id="login" style="display:none;min-height:100dvh;background:var(--navy);flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <img src="apple-touch-icon.png" alt="Agroquima" style="height:72px;margin-bottom:24px;border-radius:18px;box-shadow:0 4px 16px rgba(0,0,0,.4)" onerror="this.style.display='none'">
+  <div style="background:#fff;border-radius:18px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.35)">
+    <h2 style="color:var(--navy);font-size:18px;font-weight:900;margin-bottom:6px;text-align:center">Agenda Executiva</h2>
+    <p style="font-size:13px;color:#666;text-align:center;margin-bottom:22px">Digite seu e-mail para acessar</p>
+    <label style="font-size:12px;color:#555;font-weight:bold">E-mail</label>
+    <input id="loginEmail" type="email" placeholder="seu@agroquima.com.br" autocomplete="email" autocapitalize="none"
+      style="margin-top:6px;margin-bottom:16px;display:block;width:100%;padding:12px 14px;border:1.5px solid #ccd;border-radius:10px;font-size:16px;outline:none"
+      onkeydown="if(event.key==='Enter')fazerLogin()">
+    <div id="loginErro" style="display:none;color:#c00;font-size:12px;margin-bottom:12px;text-align:center"></div>
+    <button onclick="fazerLogin()" style="width:100%;padding:14px;background:var(--royal);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;letter-spacing:.3px">Entrar</button>
+  </div>
+</div>
+
 <!-- ================= APP INTERNO ================= -->
 <div id="app" style="display:none">
   <div class="topbar">
@@ -267,6 +282,7 @@ main,.modal-b{-webkit-overflow-scrolling:touch}
     <button class="btn btn-ghost btn-sm" id="btnSync" onclick="sincManual()" title="Sincronizar agora">↻</button>
     <button class="btn btn-ghost btn-sm" onclick="copiarLinkPublico()" title="Copiar link de agendamento">🔗 <span class="topbar-lbl">Link de agendamento</span></button>
     <button class="btn btn-ghost btn-sm topbar-print" onclick="window.print()" title="Imprimir visão atual">🖨️</button>
+    <button class="btn btn-ghost btn-sm" onclick="sair()" title="Sair / trocar usuário" style="opacity:.65">⏏</button>
   </div>
   <div id="installBanner" style="display:none">
     <span class="ib-txt">📲 Instale a Agenda AQM para acessar mais rápido!</span>
@@ -1104,13 +1120,35 @@ function podeVerQuadro(){
   }catch(e){ return false; }
 }
 
-/* ---------- BOOT ---------- */
-if(location.hash==='#agendar' || !podeVerQuadro()){
-  iniciarPublico();
-} else {
+/* ---------- LOGIN ---------- */
+function fazerLogin(){
+  const email=($('loginEmail').value||'').trim().toLowerCase();
+  const erro=$('loginErro');
+  if(!email){ erro.textContent='Digite seu e-mail.'; erro.style.display='block'; return; }
+  if(!QUADRO_PERMITIDO.includes(email)){
+    erro.textContent='E-mail não autorizado. Verifique e tente novamente.'; erro.style.display='block'; return;
+  }
+  try{ localStorage.setItem('auditoria_user', email); }catch(e){}
+  $('login').style.display='none';
   $('app').style.display='block';
   iniciarApp();
   detectarIOS();
+}
+function sair(){
+  try{ localStorage.removeItem('auditoria_user'); }catch(e){}
+  location.reload();
+}
+
+/* ---------- BOOT ---------- */
+if(location.hash==='#agendar'){
+  iniciarPublico();
+} else if(podeVerQuadro()){
+  $('app').style.display='block';
+  iniciarApp();
+  detectarIOS();
+} else {
+  $('login').style.display='flex';
+  setTimeout(()=>{ const el=$('loginEmail'); if(el) el.focus(); }, 300);
 }
 </script>
 </body>
